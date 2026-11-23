@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Patient Appointment Scheduling & Pre-Arrival Management System</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Custom Application Styles -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Left Navigation Sidebar -->
+        <aside class="app-sidebar" id="appSidebar">
+            <div class="brand-section">
+                <div class="brand-logo-icon">
+                    <i class="bi bi-calendar2-check-fill"></i>
+                </div>
+                <div class="brand-title">
+                    Advanced Patient Scheduling
+                    <small>& Pre-Arrival Management System</small>
+                </div>
+            </div>
+
+            <ul class="sidebar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-view="dashboard">
+                        <i class="bi bi-grid-fill"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-view="patient-registration">
+                        <i class="bi bi-person-plus-fill"></i>
+                        <span>Patient Registration</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-view="doctor-rosters">
+                        <i class="bi bi-people-fill"></i>
+                        <span>Doctor Rosters</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" data-view="advance-scheduling">
+                        <i class="bi bi-calendar2-check-fill"></i>
+                        <span>Advance Scheduling</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-view="visit-flow">
+                        <i class="bi bi-diagram-3-fill"></i>
+                        <span>Visit Flow</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-view="analytics">
+                        <i class="bi bi-bar-chart-line-fill"></i>
+                        <span>Analytics</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <div class="fw-semibold">Advanced Patient Scheduling</div>
+                <small class="text-white-50">& Pre-Arrival Management System</small>
+            </div>
+        </aside>
+
+        <!-- Main Content Layout -->
+        <div class="app-main">
+            <!-- Top Header Navbar -->
+            <header class="app-header">
+                <div class="header-left">
+                    <button class="header-toggle-btn" id="sidebarToggleBtn" aria-label="Toggle navigation">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <h1 class="page-header-title" id="pageHeaderTitle">Patient Advance Scheduling & Pre-Arrival Flow
+                    </h1>
+                </div>
+
+                <div class="header-right">
+                    <!-- Register Patient Button -->
+                    <button class="btn-clinic-primary" onclick="openNewPatientModal()">
+                        <i class="bi bi-person-plus-fill"></i>
+                        <span>Register New Patient</span>
+                    </button>
+
+                    <!-- System Status Badges -->
+                    <div class="d-none d-md-flex align-items-center gap-2">
+                        <span class="badge-pill-status total">
+                            Total Scheduled: <strong id="totalScheduledCount" class="ms-1">0</strong>
+                        </span>
+                    </div>
+
+                    <!-- Notification & Profile -->
+                    <div class="header-actions">
+
+                        <!-- Bell Button with Badge + Dropdown -->
+                        <div class="position-relative">
+                            <button class="header-icon-btn" id="notificationBellBtn"
+                                title="Today's Pre-Arrival Patients">
+                                <i class="bi bi-bell"></i>
+                                <span class="notification-badge" id="notificationBadge" style="display:none">0</span>
+                            </button>
+                            <div class="dropdown-panel" id="notificationDropdown">
+                                <div class="dropdown-panel-header">
+                                    <i class="bi bi-bell-fill text-primary me-2"></i>
+                                    <strong>Today's Pre-Arrival</strong>
+                                </div>
+                                <div id="notificationList">
+                                    <div class="dropdown-panel-empty text-muted small">Loading...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Profile Avatar with Role Label + Dropdown -->
+                        <div class="position-relative d-flex align-items-center gap-2">
+                            <span class="d-none d-lg-inline small text-muted fw-semibold"
+                                style="font-size:0.8rem;">Front Desk</span>
+                            <div class="avatar-circle" id="profileAvatarBtn" role="button" title="Session Info"
+                                style="cursor:pointer;">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <div class="dropdown-panel" id="profileDropdown" style="min-width:270px;">
+                                <div class="dropdown-panel-header">
+                                    <i class="bi bi-person-circle text-primary me-2"></i>
+                                    <strong>Session Info</strong>
+                                </div>
+                                <div class="dropdown-panel-body">
+                                    <div class="dropdown-info-row">
+                                        <span class="text-muted">Role</span>
+                                        <span class="fw-semibold">Front Desk</span>
+                                    </div>
+                                    <div class="dropdown-info-row">
+                                        <span class="text-muted">Shift</span>
+                                        <span class="text-success fw-semibold"><i class="bi bi-circle-fill me-1"
+                                                style="font-size:0.5rem;"></i>Online</span>
+                                    </div>
+                                    <div class="dropdown-info-row">
+                                        <span class="text-muted">Server</span>
+                                        <span id="profileDbStatus" class="fw-semibold text-success">Connected</span>
+                                    </div>
+                                </div>
+                                <div class="dropdown-panel-footer">
+                                    <a href="#" class="dropdown-quick-link" data-view="project-info"
+                                        id="profileProjectLink">
+                                        <i class="bi bi-info-circle me-2"></i>Project Info
+                                    </a>
+                                    <a href="#" class="dropdown-quick-link" id="profileRefreshBtn">
+                                        <i class="bi bi-arrow-clockwise me-2"></i>Refresh System Data
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Dynamic Content Views -->
+            <main class="app-content">
+
+                <!-- ======================================================== -->
+                <!-- VIEW 1: ADVANCE SCHEDULING (Matches User Mockup)          -->
+                <!-- ======================================================== -->
+                <section id="view-advance-scheduling" class="view-section">
+                    <div class="row">
+
+                        <!-- Left Column: Book Advance Appointment Form -->
+                        <div class="col-lg-6">
+                            <div class="clinic-card">
+                                <div class="clinic-card-title">
+                                    <span><i class="bi bi-calendar-plus me-2 text-primary"></i>Book Advance
+                                        Appointment</span>
+                                    <span class="badge bg-light text-secondary border fw-normal"
+                                        style="font-size: 0.75rem;">Step 1 of 2</span>
+                                </div>
+
+                                <div id="bookingAlertContainer"></div>
+
+                                <form id="bookAppointmentForm">
+                                    <!-- Patient Search & Selection -->
+                                    <div class="form-group-custom position-relative">
+                                        <label class="form-label-custom">Patient Search</label>
+                                        <div class="input-group-search">
+                                            <input type="text" id="patientSearchInput" class="form-control-custom"
+                                                placeholder="Search patient by name or phone..." autocomplete="off">
+                                            <button type="button" class="btn btn-search-doctor"
+                                                onclick="openNewPatientModal()">
+                                                <i class="bi bi-plus-lg me-1"></i>New
+                                            </button>
+                                        </div>
+
+                                        <!-- Autocomplete dropdown -->
+                                        <div id="patientSearchResults" class="search-results-dropdown d-none"></div>
+
+                                        <!-- Selected Patient Chip -->
+                                        <div id="selectedPatientBadge"
+                                            class="mt-2 p-2 bg-light border rounded d-flex justify-content-between align-items-center d-none">
+                                            <div class="small">
+                                                <i class="bi bi-person-check-fill text-success me-1"></i>
+                                                Selected: <strong id="selectedPatientName"></strong>
+                                                <span id="selectedPatientPhone" class="text-muted ms-1"></span>
+                                            </div>
+                                            <button type="button" class="btn-close btn-close-sm"
+                                                id="clearSelectedPatient" aria-label="Clear selection"></button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Select Doctor -->
+                                    <div class="form-group-custom">
+                                        <label class="form-label-custom">Select Doctor</label>
+                                        <select id="bookingDoctorSelect" class="form-select-custom" required>
+                                            <option value="">-- Loading Doctors --</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Select Date (Calendar) -->
+                                    <div class="form-group-custom">
+                                        <label class="form-label-custom">Select Date (Calendar)</label>
+                                        <div class="input-group">
+                                            <input type="date" id="bookingDateInput" class="form-control-custom"
+                                                required>
+                                        </div>
+                                    </div>
+
+                                    <!-- Choose Time Slot -->
+                                    <div class="form-group-custom">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <label class="form-label-custom mb-0">Choose Available Time Slot</label>
+                                            <small id="slotSelectionNotice" class="text-muted"
+                                                style="font-size: 0.78rem;">Select doctor & date</small>
+                                        </div>
+
+                                        <div id="slotSelectionGrid" class="slot-grid-container">
+                                            <!-- Dynamically rendered slot pill buttons -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Consultation Reason -->
+                                    <div class="form-group-custom">
+                                        <label class="form-label-custom">Reason for Visit</label>
+                                        <input type="text" id="bookingReasonInput" class="form-control-custom"
+                                            placeholder="e.g. Routine checkup, Cardiology review, Prescription renewal">
+                                    </div>
+
+                                    <!-- Optional Clinical Notes -->
+                                    <div class="form-group-custom">
+                                        <label class="form-label-custom">Notes / Special Requirements (Optional)</label>
+                                        <textarea id="bookingNotesInput" class="form-control-custom" rows="2"
+                                            placeholder="Any additional notes for the triage nurse or doctor..."></textarea>
+                                    </div>
+
+                                    <!-- Submit Booking Button -->
+                                    <button type="submit" id="submitBookingBtn"
+                                        class="btn btn-clinic-primary w-100 py-2 justify-content-center mt-3">
+                                        <i class="bi bi-calendar-check me-2"></i>Confirm Appointment
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Daily Advance Schedule Table -->
+                        <div class="col-lg-6">
+                            <div class="clinic-card">
+                                <div class="clinic-card-title">
+                                    <span><i class="bi bi-card-checklist me-2 text-primary"></i>Daily Advance
+                                        Schedule</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="date" id="scheduleDateFilter" class="form-control form-control-sm"
+                                            style="width: 140px;">
+                                        <span id="dailyScheduleCount"
+                                            class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                            0 Scheduled
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="table-responsive" style="min-height: 380px;">
+                                    <table class="table-clinic">
+                                        <thead>
+                                            <tr>
+                                                <th>Patient Name</th>
+                                                <th>Scheduled Date</th>
+                                                <th>Status</th>
+                                                <th class="text-end">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="dailyScheduleTableBody">
+                                            <!-- Rendered dynamically -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Bottom Card: Pre-Arrival & Visit Flow Pipeline -->
+                    <div class="clinic-card mt-2">
+                        <div class="clinic-card-title mb-2">
+                            <span><i class="bi bi-bezier2 me-2 text-primary"></i>Pre-Arrival & Visit Flow</span>
+                            <small class="text-muted fw-normal" style="font-size: 0.8rem;">Live patient counts for
+                                today, <span id="flowPipelineDate"></span> â€” all active stages</small>
+                        </div>
+
+                        <div class="flow-pipeline-container">
+                            <!-- Step 1: Pre-Arrival / Scheduled -->
+                            <div class="flow-step-node active">
+                                <div class="flow-step-title">1. Pre-Arrival</div>
+                                <div class="flow-step-count" id="flowCountPreArrival">0</div>
+                                <small class="text-muted">Advance Booked</small>
+                            </div>
+
+                            <div class="flow-arrow"><i class="bi bi-chevron-right"></i></div>
+
+                            <!-- Step 2: Checked-In -->
+                            <div class="flow-step-node">
+                                <div class="flow-step-title">2. Check-In / Arrival</div>
+                                <div class="flow-step-count" id="flowCountCheckedIn">0</div>
+                                <small class="text-muted">In Waiting Area</small>
+                            </div>
+
+                            <div class="flow-arrow"><i class="bi bi-chevron-right"></i></div>
+
+                            <!-- Step 3: In Consultation -->
+                            <div class="flow-step-node">
+                                <div class="flow-step-title">3. Consultation</div>
+                                <div class="flow-step-count" id="flowCountConsultation">0</div>
+                                <small class="text-muted">With Doctor</small>
+                            </div>
+
+                            <div class="flow-arrow"><i class="bi bi-chevron-right"></i></div>
+
+                            <!-- Step 4: Completed -->
+                            <div class="flow-step-node">
+                                <div class="flow-step-title">4. Visit Completed</div>
+                                <div class="flow-step-count" id="flowCountCompleted">0</div>
+                                <small class="text-muted">Discharged / Pharmacy</small>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ======================================================== -->
+                <!-- VIEW 2: DASHBOARD OVERVIEW                                -->
+                <!-- ======================================================== -->
+                <section id="view-dashboard" class="view-section d-none">
+                    <div class="row g-3 mb-4">
+                        <div class="col-sm-6 col-xl-3">
+                            <div class="stat-widget">
+                                <div class="stat-icon-wrapper stat-icon-blue">
+                                    <i class="bi bi-calendar2-week"></i>
+                                </div>
+                                <div>
+                                    <div class="stat-number" id="statTotalAppts">0</div>
+                                    <div class="stat-label">Total Active Appointments</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-xl-3">
+                            <div class="stat-widget">
+                                <div class="stat-icon-wrapper stat-icon-green">
+                                    <i class="bi bi-calendar-event"></i>
+                                </div>
+                                <div>
+                                    <div class="stat-number" id="statTodayAppts">0</div>
+                                    <div class="stat-label">Scheduled Today</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-xl-3">
+                            <div class="stat-widget">
+                                <div class="stat-icon-wrapper stat-icon-purple">
+                                    <i class="bi bi-people"></i>
+                                </div>
+                                <div>
+                                    <div class="stat-number" id="statTotalPatients">0</div>
+                                    <div class="stat-label">Registered Patients</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-xl-3">
+                            <div class="stat-widget">
+                                <div class="stat-icon-wrapper stat-icon-amber">
+                                    <i class="bi bi-heart-pulse"></i>
+                                </div>
+                                <div>
+                                    <div class="stat-number" id="statActiveDoctors">0</div>
+                                    <div class="stat-label">Active Doctors on Roster</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="clinic-card">
+                                <div class="clinic-card-title">
+                                    <span><i class="bi bi-lightning-charge me-2 text-primary"></i>Quick
+                                        Operations</span>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="border rounded p-3 bg-light">
+                                            <h6 class="fw-bold mb-1"><i
+                                                    class="bi bi-calendar-plus text-primary me-2"></i>Book Patient
+                                                Appointment</h6>
+                                            <p class="small text-muted mb-3">Schedule a patient with an active doctor
+                                                without double-booking.</p>
+                                            <button class="btn btn-sm btn-clinic-primary"
+                                                onclick="document.querySelector('[data-view=\'advance-scheduling\']').click()">
+                                                Open Advance Scheduling
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="border rounded p-3 bg-light">
+                                            <h6 class="fw-bold mb-1"><i
+                                                    class="bi bi-person-plus text-success me-2"></i>Register New Patient
+                                            </h6>
+                                            <p class="small text-muted mb-3">Create a new patient profile with
+                                                demographic and emergency contact details.</p>
+                                            <button class="btn btn-sm btn-outline-primary"
+                                                onclick="openNewPatientModal()">
+                                                Register Patient
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            <div class="clinic-card">
+                                <div class="clinic-card-title">
+                                    <span><i class="bi bi-clipboard2-pulse-fill me-2 text-primary"></i>Clinic Operations
+                                        Summary</span>
+                                </div>
+                                <ul class="list-group list-group-flush small">
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span class="text-muted">Slot Duration:</span>
+                                        <strong>45 Minutes</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span class="text-muted">Active Specialists:</span>
+                                        <strong id="clinicOpsSpecialists" class="text-primary">—</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span class="text-muted">Operating Hours:</span>
+                                        <strong>09:00 – 17:00 (WAT)</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span class="text-muted">Scheduling Status:</span>
+                                        <span
+                                            class="badge bg-success-subtle text-success border border-success-subtle"><i
+                                                class="bi bi-check-circle-fill me-1"></i>Open / Active</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Today's Upcoming Schedule & Recent Activity -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="clinic-card">
+                                <div class="clinic-card-title d-flex justify-content-between align-items-center">
+                                    <span><i class="bi bi-clock-history me-2 text-primary"></i>Today's Upcoming
+                                        Appointments & Pre-Arrival Queue</span>
+                                    <button class="btn btn-sm btn-outline-primary"
+                                        onclick="document.querySelector('[data-view=\'visit-flow\']').click()">
+                                        <i class="bi bi-diagram-3 me-1"></i>Open Visit Flow
+                                    </button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table-clinic mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Patient</th>
+                                                <th>Doctor & Specialty</th>
+                                                <th>Time Slot (WAT)</th>
+                                                <th>Status</th>
+                                                <th>Quick Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="dashboardUpcomingTableBody">
+                                            <tr>
+                                                <td colspan="5" class="text-center py-3 text-muted">
+                                                    <i class="bi bi-hourglass-split me-1"></i>Loading today's
+                                                    schedule...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ======================================================== -->
+                <!-- VIEW 3: PATIENT REGISTRATION & RECORDS                    -->
+                <!-- ======================================================== -->
+                <section id="view-patient-registration" class="view-section d-none">
+                    <div class="clinic-card">
+                        <div class="clinic-card-title">
+                            <span><i class="bi bi-people-fill me-2 text-primary"></i>Patient Directory & Records</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <button class="btn btn-sm btn-clinic-primary" onclick="openNewPatientModal()">
+                                    <i class="bi bi-plus-lg me-1"></i>New Patient
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                                <input type="text" id="patientRecordsSearchInput" class="form-control"
+                                    placeholder="Search registered patients by name, phone, or email...">
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table-clinic">
+                                <thead>
+                                    <tr>
+                                        <th>Patient ID</th>
+                                        <th>Full Name</th>
+                                        <th>Phone</th>
+                                        <th>Email</th>
+                                        <th>Gender</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="patientRecordsTableBody">
+                                    <!-- Rendered dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ======================================================== -->
+                <!-- VIEW 4: DOCTOR ROSTERS                                    -->
+                <!-- ======================================================== -->
+                <section id="view-doctor-rosters" class="view-section d-none">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-0">Doctor Rosters & Schedule Management</h5>
+                            <small class="text-muted">Manage active medical specialists, working days, and shift
+                                schedules</small>
+                        </div>
+                        <button class="btn btn-clinic-primary btn-sm" onclick="openAddDoctorModal()">
+                            <i class="bi bi-person-plus-fill me-1"></i>Add New Doctor
+                        </button>
+                    </div>
+
+                    <div class="row" id="doctorRosterList">
+                        <!-- Doctor cards rendered dynamically -->
+                    </div>
+                </section>
+
+
+                <!-- ======================================================== -->
+                <!-- VIEW 5: VISIT FLOW KANBAN PIPELINE                        -->
+                <!-- ======================================================== -->
+                <section id="view-visit-flow" class="view-section d-none">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-0">Patient Visit Flow & Stage Progression</h5>
+                            <small class="text-muted">Track patients seamlessly from pre-arrival to consultation and
+                                completion</small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="refreshVisitFlow()">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Refresh Flow
+                        </button>
+                    </div>
+
+                    <div class="row" id="visitFlowColumns">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </section>
+
+
+                <!-- ======================================================== -->
+                <!-- VIEW 6: ANALYTICS                                         -->
+                <!-- ======================================================== -->
+                <section id="view-analytics" class="view-section d-none">
+                    <div class="clinic-card">
+                        <div class="clinic-card-title">
+                            <span><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Operational Insights</span>
+                        </div>
+                        <p class="text-muted">Real-time breakdown of clinic volume and specialty distributions.</p>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="border rounded p-3">
+                                    <h6 class="fw-bold mb-3">Schedule Distribution by Status</h6>
+                                    <div class="d-flex justify-content-between border-bottom py-2">
+                                        <span>Scheduled / Confirmed</span>
+                                        <strong class="text-primary" id="analyticsScheduled">—</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between border-bottom py-2">
+                                        <span>Checked-In &amp; Waiting</span>
+                                        <strong class="text-info" id="analyticsCheckedIn">—</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between border-bottom py-2">
+                                        <span>In Consultation</span>
+                                        <strong class="text-warning" id="analyticsInConsultation">—</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between py-2">
+                                        <span>Visits Completed</span>
+                                        <strong class="text-success" id="analyticsCompleted">—</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-3">
+                                    <h6 class="fw-bold mb-3">Double-Booking Guard Metrics</h6>
+                                    <p class="small text-muted mb-2">Overlapping appointment prevention ensures 0%
+                                        conflicting bookings across all doctor schedules.</p>
+                                    <div class="alert alert-success d-flex align-items-center mb-0">
+                                        <i class="bi bi-shield-check fs-4 me-2"></i>
+                                        <div>
+                                            <strong>Conflict Prevention Active</strong><br>
+                                            <small>Interval overlap algorithm enforces doctor time slots
+                                                strictly.</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Specialty Breakdown -->
+                            <div class="col-12">
+                                <div class="border rounded p-3">
+                                    <h6 class="fw-bold mb-3"><i
+                                            class="bi bi-bar-chart-line me-2 text-primary"></i>Appointment Volume by
+                                        Specialty</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Specialty</th>
+                                                    <th class="text-end" style="width:120px;">Appointments</th>
+                                                    <th style="width:45%;">Distribution</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="specialtyBreakdownBody">
+                                                <tr>
+                                                    <td colspan="3" class="text-center text-muted py-3">Loading...</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ======================================================== -->
+                <!-- VIEW 7: CSC 392/394 PROJECT INFO                          -->
+                <!-- ======================================================== -->
+                <section id="view-project-info" class="view-section d-none">
+                    <div class="clinic-card">
+                        <div class="clinic-card-title">
+                            <span><i class="bi bi-info-circle-fill me-2 text-primary"></i>CSC 392: Software Dev SIWES
+                                Project</span>
+                            <span class="badge bg-primary">Project Info</span>
+                        </div>
+
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <h6 class="fw-bold text-primary">Project Overview</h6>
+                                <p class="small text-muted">
+                                    The <strong>Advanced Patient Appointment Scheduling & Pre-Arrival Management
+                                        System</strong> is a full-stack clinical
+                                    platform designed to streamline outpatient visits, schedule advance appointments,
+                                    and eliminate double-booking conflicts.
+                                </p>
+
+                                <h6 class="fw-bold text-primary mt-3">Tech Stack</h6>
+                                <ul class="small text-muted list-unstyled">
+                                    <li><i class="bi bi-check-circle text-success me-2"></i><strong>Frontend:</strong>
+                                        HTML5, CSS3, Bootstrap 5.3, Vanilla JavaScript (SPA Architecture)</li>
+                                    <li><i class="bi bi-check-circle text-success me-2"></i><strong>Backend:</strong>
+                                        Node.js, Express.js REST API</li>
+                                    <li><i class="bi bi-check-circle text-success me-2"></i><strong>Database:</strong>
+                                        MySQL 8.x with connection pooling (mysql2/promise)</li>
+                                </ul>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h6 class="fw-bold text-primary">Database Tables & Relationships</h6>
+                                <ul class="small text-muted list-unstyled">
+                                    <li><strong>patients:</strong> Demographics, contact information, emergency contacts
+                                    </li>
+                                    <li><strong>doctors:</strong> Healthcare providers, medical specialties, active
+                                        status</li>
+                                    <li><strong>doctor_schedules:</strong> Weekly availability slots and session
+                                        durations</li>
+                                    <li><strong>appointments:</strong> Patient-doctor bookings with double-booking
+                                        prevention</li>
+                                    <li><strong>appointment_status_history:</strong> Clinical visit flow audit history
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+
+    <!-- ======================================================== -->
+    <!-- MODAL: REGISTER NEW PATIENT                              -->
+    <!-- ======================================================== -->
+    <div class="modal fade modal-clinic" id="registerPatientModal" tabindex="-1"
+        aria-labelledby="registerPatientModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="registerPatientModalLabel">
+                        <i class="bi bi-person-plus-fill text-primary me-2"></i>Register New Patient
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <form id="registerPatientForm">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label-custom">First Name <span class="text-danger">*</span></label>
+                                <input type="text" id="regFirstName" class="form-control-custom" required
+                                    placeholder="e.g. Chidinma">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Last Name <span class="text-danger">*</span></label>
+                                <input type="text" id="regLastName" class="form-control-custom" required
+                                    placeholder="e.g. Okafor">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Phone Number <span class="text-danger">*</span></label>
+                                <input type="tel" id="regPhone" class="form-control-custom" required
+                                    placeholder="+234 803 456 7890">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Email Address <span
+                                        class="text-danger">*</span></label>
+                                <input type="email" id="regEmail" class="form-control-custom" required
+                                    placeholder="chidinma.okafor@gmail.com">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Date of Birth <span
+                                        class="text-danger">*</span></label>
+                                <input type="date" id="regDob" class="form-control-custom" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Gender <span class="text-danger">*</span></label>
+                                <select id="regGender" class="form-select-custom" required>
+                                    <option value="">-- Select Gender --</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label-custom">Residential Address <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" id="regAddress" class="form-control-custom" required
+                                    placeholder="e.g. 14 Admiralty Way, Lekki Phase 1, Lagos">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label-custom">Emergency Contact Name & Phone <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" id="regEmergencyContact" class="form-control-custom" required
+                                    placeholder="e.g. Emeka Okafor (Spouse) - +234 802 345 6789">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-clinic-primary">
+                            <i class="bi bi-check-lg me-1"></i>Save Patient
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ======================================================== -->
+    <!-- MODAL: PATIENT DETAILS (VIEW)                           -->
+    <!-- ======================================================== -->
+    <div class="modal fade modal-clinic" id="patientDetailsModal" tabindex="-1"
+        aria-labelledby="patientDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="patientDetailsModalLabel">
+                        <i class="bi bi-person-lines-fill text-primary me-2"></i>Patient Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12 text-center mb-2">
+                            <div class="avatar-circle mx-auto mb-2" style="width:56px;height:56px;font-size:1.5rem;">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <h5 class="fw-bold mb-0" id="detailPatientName">—</h5>
+                            <span class="text-muted small" id="detailPatientGender">—</span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 h-100">
+                                <h6 class="fw-bold text-primary mb-3"><i class="bi bi-person me-2"></i>Personal Info
+                                </h6>
+                                <div class="mb-2">
+                                    <span class="text-muted small">Date of Birth</span>
+                                    <div class="fw-semibold" id="detailPatientDob">—</div>
+                                </div>
+                                <div class="mb-2">
+                                    <span class="text-muted small">Phone Number</span>
+                                    <div class="fw-semibold" id="detailPatientPhone">—</div>
+                                </div>
+                                <div class="mb-2">
+                                    <span class="text-muted small">Email Address</span>
+                                    <div class="fw-semibold" id="detailPatientEmail">—</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 h-100">
+                                <h6 class="fw-bold text-primary mb-3"><i class="bi bi-geo-alt me-2"></i>Contact &
+                                    Emergency</h6>
+                                <div class="mb-2">
+                                    <span class="text-muted small">Residential Address</span>
+                                    <div class="fw-semibold" id="detailPatientAddress">—</div>
+                                </div>
+                                <div class="mb-2">
+                                    <span class="text-muted small">Emergency Contact</span>
+                                    <div class="fw-semibold" id="detailPatientEmergency">—</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Close</button>
+
+                    <button type="button" class="btn btn-outline-primary" id="detailEditBtn">
+                        <i class="bi bi-pencil-square me-1"></i>Edit Patient
+                    </button>
+
+                    <button type="button" class="btn btn-clinic-primary" id="detailBookBtn">
+                        <i class="bi bi-calendar-plus me-1"></i>Book Appointment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ======================================================== -->
+    <!-- MODAL: EDIT PATIENT PROFILE                              -->
+    <!-- ======================================================== -->
+    <div class="modal fade modal-clinic" id="editPatientModal" tabindex="-1" aria-labelledby="editPatientModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editPatientModalLabel">
+                        <i class="bi bi-pencil-square text-primary me-2"></i>Edit Patient Profile (<span
+                            id="editPatientCodeTitle">—</span>)
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <form id="editPatientForm">
+                    <input type="hidden" id="editPatientId">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label-custom">First Name <span class="text-danger">*</span></label>
+                                <input type="text" id="editFirstName" class="form-control-custom" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Last Name <span class="text-danger">*</span></label>
+                                <input type="text" id="editLastName" class="form-control-custom" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Phone Number <span class="text-danger">*</span></label>
+                                <input type="tel" id="editPhone" class="form-control-custom" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Email Address <span
+                                        class="text-danger">*</span></label>
+                                <input type="email" id="editEmail" class="form-control-custom" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Date of Birth <span
+                                        class="text-danger">*</span></label>
+                                <input type="date" id="editDob" class="form-control-custom" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Gender <span class="text-danger">*</span></label>
+                                <select id="editGender" class="form-select-custom" required>
+                                    <option value="">-- Select Gender --</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label-custom">Residential Address <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" id="editAddress" class="form-control-custom" required>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label-custom">Emergency Contact Name & Phone <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" id="editEmergencyContact" class="form-control-custom" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-clinic-primary">
+                            <i class="bi bi-check-lg me-1"></i>Update Patient
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- CANCEL APPOINTMENT MODAL (Mandatory Reason)               -->
+    <!-- ======================================================== -->
+    <div class="modal fade modal-clinic" id="cancelReasonModal" tabindex="-1" aria-labelledby="cancelReasonModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger-subtle text-danger">
+                    <h5 class="modal-title fw-bold" id="cancelReasonModalLabel">
+                        <i class="bi bi-x-circle-fill me-2"></i>Cancel Appointment Booking
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="cancelAppointmentForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="cancelModalApptId">
+                        <div class="alert alert-light border small text-muted mb-3" id="cancelModalPatientInfo">
+                            <!-- Populated dynamically -->
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-custom">Reason for Cancellation <span
+                                    class="text-danger">*</span></label>
+                            <textarea id="cancelModalReason" class="form-control-custom" rows="3"
+                                placeholder="e.g. Patient called to cancel due to personal emergency..."
+                                required></textarea>
+                            <small class="text-muted">A mandatory clinical reason is recorded in the audit
+                                trail.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Keep Booking</button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-x-octagon me-1"></i>Confirm Cancellation
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- RESCHEDULE APPOINTMENT MODAL                             -->
+    <!-- ======================================================== -->
+    <div class="modal fade modal-clinic" id="rescheduleModal" tabindex="-1" aria-labelledby="rescheduleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="rescheduleModalLabel">
+                        <i class="bi bi-calendar2-range-fill me-2 text-primary"></i>Reschedule Appointment
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="rescheduleAppointmentForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="rescheduleApptId">
+
+                        <!-- Current Appointment Summary -->
+                        <div class="p-3 bg-light border rounded mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold" id="reschedulePatientName">—</div>
+                                    <small class="text-muted" id="rescheduleCurrentDetails">—</small>
+                                </div>
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">45-Min
+                                    Visit</span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <!-- Select Doctor -->
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Select Doctor <span
+                                        class="text-danger">*</span></label>
+                                <select id="rescheduleDoctorSelect" class="form-select-custom" required>
+                                    <option value="">-- Loading Doctors --</option>
+                                </select>
+                            </div>
+
+                            <!-- Select New Date -->
+                            <div class="col-md-6">
+                                <label class="form-label-custom">New Date (Lagos WAT) <span
+                                        class="text-danger">*</span></label>
+                                <input type="date" id="rescheduleDateInput" class="form-control-custom" required>
+                            </div>
+
+                            <!-- Available Time Slots Grid -->
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <label class="form-label-custom mb-0">Choose Available 45-Min Time Slot <span
+                                            class="text-danger">*</span></label>
+                                    <small id="rescheduleSlotNotice" class="text-muted"
+                                        style="font-size:0.78rem;">Select doctor & date</small>
+                                </div>
+                                <div id="rescheduleSlotGrid" class="slot-grid-container mt-2">
+                                    <!-- Rendered dynamically -->
+                                </div>
+                                <input type="hidden" id="rescheduleSelectedSlot" required>
+                            </div>
+
+                            <!-- Mandatory Reason -->
+                            <div class="col-12">
+                                <label class="form-label-custom">Reason for Rescheduling <span
+                                        class="text-danger">*</span></label>
+                                <textarea id="rescheduleReason" class="form-control-custom" rows="2"
+                                    placeholder="e.g. Doctor in emergency surgery; rescheduled with patient consent..."
+                                    required></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-clinic-primary">
+                            <i class="bi bi-calendar2-check me-1"></i>Confirm Reschedule
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- ADD NEW DOCTOR MODAL                                     -->
+    <!-- ======================================================== -->
+    <div class="modal fade modal-clinic" id="addDoctorModal" tabindex="-1" aria-labelledby="addDoctorModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="addDoctorModalLabel">
+                        <i class="bi bi-person-plus-fill me-2 text-primary"></i>Add New Doctor to Roster
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="addDoctorForm">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label-custom">First Name <span class="text-danger">*</span></label>
+                                <input type="text" id="addDocFirstName" class="form-control-custom"
+                                    placeholder="e.g. Funke" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Last Name <span class="text-danger">*</span></label>
+                                <input type="text" id="addDocLastName" class="form-control-custom"
+                                    placeholder="e.g. Akintola" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label-custom">Specialty <span class="text-danger">*</span></label>
+                                <select id="addDocSpecialty" class="form-select-custom" required>
+                                    <option value="">-- Select Medical Specialty --</option>
+                                    <option value="Cardiology">Cardiology</option>
+                                    <option value="General Practitioner">General Practitioner</option>
+                                    <option value="Pediatrics">Pediatrics</option>
+                                    <option value="Orthopedics">Orthopedics</option>
+                                    <option value="Neurology">Neurology</option>
+                                    <option value="Dermatology">Dermatology</option>
+                                    <option value="Ophthalmology">Ophthalmology</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Phone Number <span class="text-danger">*</span></label>
+                                <input type="tel" id="addDocPhone" class="form-control-custom"
+                                    placeholder="+234 803 111 2233" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Clinic Email <span class="text-danger">*</span></label>
+                                <input type="email" id="addDocEmail" class="form-control-custom"
+                                    placeholder="f.akintola@clinic.ng" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-clinic-primary">
+                            <i class="bi bi-check-lg me-1"></i>Save Doctor
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- MANAGE DOCTOR SCHEDULE MODAL                             -->
+    <!-- ======================================================== -->
+    <div class="modal fade modal-clinic" id="doctorScheduleModal" tabindex="-1"
+        aria-labelledby="doctorScheduleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="doctorScheduleModalLabel">
+                        <i class="bi bi-clock-history me-2 text-primary"></i>Manage Weekly Working Schedule
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="doctorScheduleForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="schedDoctorId">
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light border rounded">
+                            <div>
+                                <strong id="schedDoctorName">Dr. Specialist</strong>
+                                <span class="badge bg-primary-subtle text-primary border ms-2"
+                                    id="schedDoctorSpecialty">Specialty</span>
+                            </div>
+                            <span class="badge bg-light text-secondary border">45-Min Slots</span>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table-clinic mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Day of Week</th>
+                                        <th style="width: 130px;">Working Status</th>
+                                        <th style="width: 140px;">Shift Start</th>
+                                        <th style="width: 140px;">Shift End</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="schedTableBody">
+                                    <!-- Populated dynamically (Mon-Sun) -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-clinic-primary">
+                            <i class="bi bi-check-circle me-1"></i>Update Weekly Schedule
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Floating Toast Notifications Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer" style="z-index: 1100;"></div>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Application Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/script.js"></script>
+</body>
+
+</html>
