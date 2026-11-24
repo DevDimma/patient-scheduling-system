@@ -29,18 +29,25 @@ function minutesToTime(mins) {
 router.get('/', async (req, res) => {
   try {
     const { includeInactive } = req.query;
+    // works_today: does the doctor have a working shift on today's weekday (Lagos date)?
     let query = `
-      SELECT doctor_id, first_name, last_name, specialty, phone, email, is_active, created_at 
-      FROM doctors
+      SELECT d.doctor_id, d.first_name, d.last_name, d.specialty, d.phone, d.email, d.is_active, d.created_at,
+        EXISTS (
+          SELECT 1 FROM doctor_schedules s
+          WHERE s.doctor_id = d.doctor_id
+            AND s.day_of_week = DAYOFWEEK(?)
+            AND s.is_available = TRUE
+        ) AS works_today
+      FROM doctors d
     `;
 
     if (includeInactive === 'true' || includeInactive === '1') {
-      query += ` ORDER BY is_active DESC, specialty ASC, first_name ASC`;
+      query += ` ORDER BY d.is_active DESC, d.specialty ASC, d.first_name ASC`;
     } else {
-      query += ` WHERE is_active = TRUE ORDER BY specialty ASC, first_name ASC`;
+      query += ` WHERE d.is_active = TRUE ORDER BY d.specialty ASC, d.first_name ASC`;
     }
 
-    const [rows] = await pool.query(query);
+    const [rows] = await pool.query(query, [getLagosDateString()]);
     res.json({ success: true, data: rows });
   } catch (error) {
     console.error('Error fetching doctors:', error);

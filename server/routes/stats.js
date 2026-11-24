@@ -22,11 +22,11 @@ router.get('/dashboard', async (req, res) => {
 
     // Counts
     const [[{ total_scheduled }]] = await pool.query(
-      `SELECT COUNT(*) AS total_scheduled FROM appointments WHERE status NOT IN ('Cancelled', 'No-Show')`
+      `SELECT COUNT(*) AS total_scheduled FROM appointments WHERE status IN ('Scheduled', 'Checked-In', 'In Consultation')`
     );
 
     const [[{ today_scheduled }]] = await pool.query(
-      `SELECT COUNT(*) AS today_scheduled FROM appointments WHERE appointment_date = ? AND status NOT IN ('Cancelled', 'No-Show')`,
+      `SELECT COUNT(*) AS today_scheduled FROM appointments WHERE appointment_date = ? AND status IN ('Scheduled', 'Checked-In', 'In Consultation')`,
       [today]
     );
 

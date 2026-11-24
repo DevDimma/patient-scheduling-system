@@ -116,7 +116,11 @@ async function refreshDashboardStats() {
             const statActiveDoctors = document.getElementById('statActiveDoctors');
             if (statActiveDoctors) statActiveDoctors.textContent = res.counts.total_doctors || 0;
 
+            const specialistsEl = document.getElementById('clinicOpsSpecialists');
+            if (specialistsEl) specialistsEl.textContent = res.counts.total_doctors || 0;
+
             updateFlowCounts(res.visit_flow || []);
+            loadDashboardUpcoming();
         }
     } catch (error) {
         console.warn('Could not refresh stats:', error.message);
@@ -315,14 +319,25 @@ function renderDoctorRosters() {
     }
 
     container.innerHTML = list.map(doc => {
-        const isActive = Boolean(doc.is_active);
-        const badgeHtml = isActive
-            ? `<span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle me-1"></i>Active on Roster</span>`
-            : `<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle"><i class="bi bi-pause-circle me-1"></i>Inactive / Off Duty</span>`;
+        const isActive = Boolean(Number(doc.is_active));
+        const worksToday = Boolean(Number(doc.works_today));
 
-        const buttonHtml = isActive
-            ? `<button class="btn btn-sm btn-outline-primary" onclick="quickSelectDoctor(${doc.doctor_id})"><i class="bi bi-calendar-plus me-1"></i>Book Doctor</button>`
+        let badgeHtml;
+        if (!isActive) {
+            badgeHtml = `<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle"><i class="bi bi-pause-circle me-1"></i>Inactive / Off Duty</span>`;
+        } else if (worksToday) {
+            badgeHtml = `<span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle me-1"></i>On Duty Today</span>`;
+        } else {
+            badgeHtml = `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle"><i class="bi bi-moon me-1"></i>Active · Off Today</span>`;
+        }
+
+        const bookHtml = isActive
+            ? `<button class="btn btn-sm btn-outline-primary" onclick="quickSelectDoctor(${doc.doctor_id})"><i class="bi bi-calendar-plus me-1"></i>Book</button>`
             : `<button class="btn btn-sm btn-light border text-muted" disabled title="Doctor is currently inactive"><i class="bi bi-slash-circle me-1"></i>Unavailable</button>`;
+
+        const scheduleHtml = `<button class="btn btn-sm btn-outline-secondary" onclick="openDoctorScheduleModal(${doc.doctor_id})"><i class="bi bi-clock-history me-1"></i>Schedule</button>`;
+
+        const toggleHtml = `<button class="btn btn-sm btn-light border ${isActive ? 'text-danger' : 'text-success'}" onclick="toggleDoctorActive(${doc.doctor_id})">${isActive ? 'Deactivate' : 'Activate'}</button>`;
 
         const initials = `${escapeHTML(doc.first_name[0] || '')}${escapeHTML(doc.last_name[0] || '')}`;
 
@@ -341,9 +356,9 @@ function renderDoctorRosters() {
               </div>
               <p class="small text-muted mb-1"><i class="bi bi-telephone me-2"></i>${escapeHTML(doc.phone || 'N/A')}</p>
               <p class="small text-muted mb-2"><i class="bi bi-envelope me-2"></i>${escapeHTML(doc.email || 'N/A')}</p>
-              <div class="border-top pt-2 mt-2 d-flex justify-content-between align-items-center">
-                ${badgeHtml}
-                ${buttonHtml}
+              <div class="border-top pt-2 mt-2">
+                <div class="mb-2">${badgeHtml}</div>
+                <div class="d-flex flex-wrap gap-2">${bookHtml}${scheduleHtml}${toggleHtml}</div>
               </div>
             </div>
           </div>
@@ -813,7 +828,7 @@ async function loadNotifications() {
     if (!listEl) return;
 
     try {
-        const today = new Date().toISOString().split('T')[0];
+        const today = getLagosTodayString();
         const res = await API.getAppointments({ date: today, status: 'Scheduled' });
         const items = (res.success && res.data) ? res.data : [];
 
@@ -1434,4 +1449,208 @@ function showToast(message, type = 'primary') {
     toastElement.addEventListener('hidden.bs.toast', () => {
         toastElement.remove();
     });
+}
+
+
+// -------------------------------------------------------------
+// Doctor Management: Add Doctor, Activate/Deactivate, Weekly Schedule
+// -------------------------------------------------------------
+window.openAddDoctorModal = function () {
+    const form = document.getElementById('addDoctorForm');
+    if (form) form.reset();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('addDoctorModal')).show();
+};
+
+window.toggleDoctorActive = async function (doctorId) {
+    try {
+        const res = await API.toggleDoctorActive(doctorId);
+        showToast(res.message || 'Doctor status updated', 'success');
+        await loadDoctors();
+        await refreshDashboardStats();
+    } catch (error) {
+        showToast('Could not update doctor: ' + error.message, 'danger');
+    }
+};
+
+// MySQL DAYOFWEEK numbers: 1 = Sunday, 2 = Monday ... 7 = Saturday
+const WEEK_DAYS = [
+    { label: 'Monday', value: 2 },
+    { label: 'Tuesday', value: 3 },
+    { label: 'Wednesday', value: 4 },
+    { label: 'Thursday', value: 5 },
+    { label: 'Friday', value: 6 },
+    { label: 'Saturday', value: 7 },
+    { label: 'Sunday', value: 1 }
+];
+
+window.openDoctorScheduleModal = async function (doctorId) {
+    const allDocs = (AppState.allDoctors && AppState.allDoctors.length > 0) ? AppState.allDoctors : AppState.doctors;
+    const doc = allDocs.find(d => Number(d.doctor_id) === Number(doctorId));
+    if (!doc) return;
+
+    try {
+        const res = await API.getDoctorSchedules(doctorId);
+        const rows = (res.success && Array.isArray(res.data)) ? res.data : [];
+
+        document.getElementById('schedDoctorId').value = doctorId;
+        document.getElementById('schedDoctorName').textContent = `Dr. ${doc.first_name} ${doc.last_name}`;
+        document.getElementById('schedDoctorSpecialty').textContent = doc.specialty;
+
+        document.getElementById('schedTableBody').innerHTML = WEEK_DAYS.map(day => {
+            const s = rows.find(r => Number(r.day_of_week) === day.value);
+            const working = s ? Boolean(Number(s.is_available)) : false;
+            const start = s ? String(s.start_time).slice(0, 5) : '09:00';
+            const end = s ? String(s.end_time).slice(0, 5) : '17:00';
+            const slot = s && s.slot_duration_minutes ? s.slot_duration_minutes : 45;
+            return `
+            <tr data-day="${day.value}" data-slot="${slot}">
+              <td class="fw-semibold">${day.label}</td>
+              <td>
+                <div class="form-check form-switch">
+                  <input class="form-check-input sched-working" type="checkbox" ${working ? 'checked' : ''}>
+                </div>
+              </td>
+              <td><input type="time" class="form-control form-control-sm sched-start" value="${start}"></td>
+              <td><input type="time" class="form-control form-control-sm sched-end" value="${end}"></td>
+            </tr>`;
+        }).join('');
+
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('doctorScheduleModal')).show();
+    } catch (error) {
+        showToast('Could not load schedule: ' + error.message, 'danger');
+    }
+};
+
+document.addEventListener('submit', async (e) => {
+    // ---- Add Doctor form ----
+    if (e.target.id === 'addDoctorForm') {
+        e.preventDefault();
+        const val = (id) => document.getElementById(id).value.trim();
+        const payload = {
+            first_name: val('addDocFirstName'),
+            last_name: val('addDocLastName'),
+            specialty: val('addDocSpecialty'),
+            phone: val('addDocPhone'),
+            email: val('addDocEmail')
+        };
+
+        const btn = e.target.querySelector('button[type="submit"]');
+        if (btn) btn.disabled = true;
+        try {
+            const res = await API.createDoctor(payload);
+            if (res.success) {
+                showToast(res.message || 'Doctor added to the roster', 'success');
+                const modalInstance = bootstrap.Modal.getInstance(document.getElementById('addDoctorModal'));
+                if (modalInstance) modalInstance.hide();
+                await loadDoctors();
+                await refreshDashboardStats();
+            }
+        } catch (error) {
+            showToast('Could not add doctor: ' + error.message, 'danger');
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+        return;
+    }
+
+    // ---- Weekly Schedule form ----
+    if (e.target.id === 'doctorScheduleForm') {
+        e.preventDefault();
+        const doctorId = document.getElementById('schedDoctorId').value;
+        const schedules = [];
+
+        for (const row of document.querySelectorAll('#schedTableBody tr')) {
+            const working = row.querySelector('.sched-working').checked;
+            const start = row.querySelector('.sched-start').value || '09:00';
+            const end = row.querySelector('.sched-end').value || '17:00';
+            if (working && end <= start) {
+                showToast('Shift end time must be after the start time on working days.', 'danger');
+                return;
+            }
+            schedules.push({
+                day_of_week: Number(row.getAttribute('data-day')),
+                start_time: start + ':00',
+                end_time: end + ':00',
+                slot_duration_minutes: Number(row.getAttribute('data-slot')) || 45,
+                is_available: working
+            });
+        }
+
+        const btn = e.target.querySelector('button[type="submit"]');
+        if (btn) btn.disabled = true;
+        try {
+            const res = await API.updateDoctorSchedules(doctorId, schedules);
+            if (res.success) {
+                showToast(res.message || 'Schedule updated', 'success');
+                const modalInstance = bootstrap.Modal.getInstance(document.getElementById('doctorScheduleModal'));
+                if (modalInstance) modalInstance.hide();
+                await loadDoctors();
+            }
+        } catch (error) {
+            showToast('Could not update schedule: ' + error.message, 'danger');
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    }
+});
+
+// -------------------------------------------------------------
+// Refresh Flow button (with visible feedback)
+// -------------------------------------------------------------
+window.manualRefreshFlow = async function (btn) {
+    const original = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Refreshing...';
+    }
+    try {
+        await refreshVisitFlow();
+        await refreshDashboardStats();
+        showToast('Visit flow refreshed', 'success');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = original;
+        }
+    }
+};
+
+// -------------------------------------------------------------
+// Dashboard: Today's Upcoming Appointments table
+// -------------------------------------------------------------
+async function loadDashboardUpcoming() {
+    const tbody = document.getElementById('dashboardUpcomingTableBody');
+    if (!tbody) return;
+
+    try {
+        const res = await API.getAppointments({ date: getLagosTodayString() });
+        const items = (res.success && res.data) ? res.data : [];
+
+        if (items.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-3 text-muted"><i class="bi bi-calendar-x me-1"></i>No appointments scheduled for today.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = items.map(a => {
+            let action = '<span class="text-muted small">—</span>';
+            if (a.status === 'Scheduled') {
+                action = `<button class="btn btn-sm btn-outline-info" onclick="changeStatus(${a.appointment_id}, 'Checked-In')">Check In</button>`;
+            } else if (a.status === 'Checked-In') {
+                action = `<button class="btn btn-sm btn-outline-warning" onclick="changeStatus(${a.appointment_id}, 'In Consultation')">Start Consultation</button>`;
+            } else if (a.status === 'In Consultation') {
+                action = `<button class="btn btn-sm btn-outline-success" onclick="changeStatus(${a.appointment_id}, 'Completed')">Complete</button>`;
+            }
+
+            return `
+            <tr>
+              <td class="fw-semibold">${escapeHTML(a.patient_name)}</td>
+              <td>${escapeHTML(a.doctor_name)}${a.doctor_specialty ? `<div class="small text-muted">${escapeHTML(a.doctor_specialty)}</div>` : ''}</td>
+              <td>${escapeHTML(a.start_time_label)} – ${escapeHTML(a.end_time_label)}</td>
+              <td><span class="status-pill ${getStatusBadgeClass(a.status)}">${escapeHTML(a.status)}</span></td>
+              <td>${action}</td>
+            </tr>`;
+        }).join('');
+    } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-danger text-center py-3">Could not load today's schedule: ${escapeHTML(error.message)}</td></tr>`;
+    }
 }
