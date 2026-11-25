@@ -20,15 +20,21 @@ function timeToMinutes(timeStr) {
   return h * 60 + (m || 0);
 }
 
-// Auto-complete visits after 45 minutes in consultation
+// How long a consultation lasts before the visit is completed automatically.
+// Change this one number (e.g. to 30) to change the session length.
+const CONSULTATION_MINUTES = 45;
+
+// Auto-complete visits once the consultation time has elapsed
 async function autoCompleteConsultations() {
   try {
+    // COALESCE: patients moved to "In Consultation" before the timer column existed
+    // (no start time saved) fall back to their last update time
     const [staleRows] = await pool.query(
       `SELECT appointment_id, status 
        FROM appointments 
        WHERE status = 'In Consultation' 
-         AND consultation_started_at IS NOT NULL 
-         AND TIMESTAMPDIFF(MINUTE, consultation_started_at, NOW()) >= 45`
+         AND TIMESTAMPDIFF(MINUTE, COALESCE(consultation_started_at, updated_at), NOW()) >= ?`,
+      [CONSULTATION_MINUTES]
     );
 
     for (const appt of staleRows) {
@@ -41,8 +47,8 @@ async function autoCompleteConsultations() {
 
       await pool.query(
         `INSERT INTO appointment_status_history (appointment_id, previous_status, new_status, remarks) 
-         VALUES (?, 'In Consultation', 'Completed', 'Automatically marked as Completed after 45 minutes in consultation')`,
-        [appt.appointment_id]
+         VALUES (?, 'In Consultation', 'Completed', ?)`,
+        [appt.appointment_id, `Automatically marked as Completed after ${CONSULTATION_MINUTES} minutes in consultation`]
       );
     }
 
